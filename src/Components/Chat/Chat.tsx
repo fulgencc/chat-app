@@ -8,7 +8,7 @@ import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
 //     hubConnection: HubConnection
 // }
 
-export function Chat(props : any) {
+export function Chat(props: any) {
     const [message, setMessage] = useState<string>('');
     const [messages, setMessages] = useState<string[]>([]);
     const [text, setText] = useState<string>('');
@@ -20,15 +20,15 @@ export function Chat(props : any) {
         setNick(window.prompt('Your name: ', 'John'));
 
         sethubConnection(
-            ()=>{
+            () => {
                 const s = new HubConnectionBuilder()
-                .withUrl("https://localhost:44320/chat")
-                .build();
+                    .withUrl("https://localhost:53889/chat")
+                    .build();
 
                 if (s) {
                     s.start().then(() => console.log('Connection started!'))
-                    .catch(err => console.log('Error while establishing connection :('));
-                    s.on('sendtoall', (nick: string, receivedMessage:string) => {
+                        .catch(err => console.log('Error while establishing connection :('));
+                    s.on('sendtoall', (nick: string, receivedMessage: string) => {
                         setText(`${nick} : ${receivedMessage}`);
 
                     })
@@ -36,33 +36,18 @@ export function Chat(props : any) {
                 return s;
             });
 
-        // if (hubConnection === undefined) {
-        // hubConnection.start().then(() => console.log('Connection started!'))
-        // .catch(err => console.log('Error while establishing connection :('));
-
-        
-        //    }
-
-        //setMessages([...messages, text]);
-
-        //const hubConnection = new HubConnection('http://localhost:3000/chat');
-        // setMessage({
-        //     nick: nick,
-        //     message: message,
-        //     messages: messages,
-        //     hubConnection: hubConnection
-        // });
-        
     }, []);
 
     useEffect(() => {
         setMessages([...messages, text]);
+        setText('');
+
     }, [text]);
 
-    function sendMessage() : void {
+    function sendMessage(): void {
         hubConnection!
-        .invoke('sendToAll', nick, message)
-        .catch(err => console.error(err));
+            .invoke('sendToAll', nick, message)
+            .catch(err => console.error(err));
 
         setMessage('');
     }
@@ -80,7 +65,7 @@ export function Chat(props : any) {
 
             <div>
                 {messages.map((message, index) => (
-                    <span style={{display: 'block'}} key={index}> {message} </span>
+                    <span style={{ display: 'block' }} key={index}> {message} </span>
                 ))}
             </div>
         </div>
