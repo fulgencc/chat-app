@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
-
 // interface IMessage {
 //     nick: string | null,
 //     message: string,
@@ -17,31 +16,49 @@ export function Chat(props: any) {
 
     useEffect(() => {
 
-        setNick(window.prompt('Your name: ', 'John'));
+        //setNick(window.prompt('Your name: ', 'John'));
 
         sethubConnection(
             () => {
                 const s = new HubConnectionBuilder()
-                    .withUrl("https://localhost:53889/chat")
+                    .withUrl("http://localhost:53889/chat")
                     .build();
 
                 if (s) {
-                    s.start().then(() => console.log('Connection started!'))
-                        .catch(err => console.log('Error while establishing connection :('));
-                    s.on('sendtoall', (nick: string, receivedMessage: string) => {
-                        setText(`${nick} : ${receivedMessage}`);
+                    s.start()
+                        .then(() => {
+                            setNick(window.prompt('Your name: ', 'John'));
+                            console.log('Connection successful!')
+                        })
+                        .catch(err => console.log('Error while establishing connection: ' + { err }));
 
+                    s.on('sendtoall', (nick: string, receivedMessage: string) => {
+                        setText(`${nick}: ${receivedMessage}`);
                     })
+
+                    s.on('newuserconnected', (nick: string) => {
+                        setText(`${nick} has connected.`);
+                    })
+                    s.off('userdisconnected', (nick: string) => {
+                        setText(`${nick} has disconnected.`);
+                    })
+
                 }
                 return s;
             });
 
+        // onConnected();
     }, []);
+
+    useEffect(() => {
+        if (nick) {
+            hubConnection!.send('AddNewUser', nick);
+        }
+    }, [nick])
 
     useEffect(() => {
         setMessages([...messages, text]);
         setText('');
-
     }, [text]);
 
     function sendMessage(): void {
@@ -52,22 +69,27 @@ export function Chat(props: any) {
         setMessage('');
     }
 
+    const onEnter = (event: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (event.key === 'Enter') {
+            sendMessage()
+        }
+    }
+
     return (
         <div>
             <br />
-            <input
-                type="text"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-            />
-
-            <button onClick={sendMessage}>Send It</button>
-
             <div>
                 {messages.map((message, index) => (
                     <span style={{ display: 'block' }} key={index}> {message} </span>
                 ))}
             </div>
-        </div>
+            <input
+                type="text"
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                onKeyDown={onEnter}
+            />
+            <button onClick={sendMessage}>Send It</button>
+        </div >
     );
 }
