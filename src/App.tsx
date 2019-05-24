@@ -8,10 +8,6 @@ const App: React.FC = () => {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <Chat></Chat>
         <a
           className="App-link"
           href="https://reactjs.org"
@@ -20,6 +16,7 @@ const App: React.FC = () => {
         >
           Learn React
         </a>
+        <Chat></Chat>
       </header>
     </div>
   );
