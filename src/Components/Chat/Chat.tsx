@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
+import { Container, Modal, ModalBody, Button, ModalFooter, Label } from 'reactstrap';
+import { ChatBox } from './ChatBox';
 // interface IMessage {
 //     nick: string | null,
 //     message: string,
@@ -9,10 +11,11 @@ import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
 
 export function Chat(props: any) {
     const [message, setMessage] = useState<string>('');
-    const [messages, setMessages] = useState<string[]>([]);
     const [text, setText] = useState<string>('');
-    const [nick, setNick] = useState<string | null>();
+    const [nick, setNick] = useState<string>();
     const [hubConnection, sethubConnection] = useState<HubConnection>();
+    const [modalOpen, setModalOpen] = useState(true);
+
 
     useEffect(() => {
 
@@ -21,13 +24,13 @@ export function Chat(props: any) {
         sethubConnection(
             () => {
                 const s = new HubConnectionBuilder()
-                    .withUrl("http://localhost:53889/chat")
+                    .withUrl("http://localhost:60709/chat")
                     .build();
 
                 if (s) {
                     s.start()
                         .then(() => {
-                            setNick(window.prompt('Your name: ', 'John'));
+                            // setNick(window.prompt('Your name: ', 'John'));
                             console.log('Connection successful!')
                         })
                         .catch(err => console.log('Error while establishing connection: ' + { err }));
@@ -48,18 +51,13 @@ export function Chat(props: any) {
             });
 
         // onConnected();
-    }, []);
+    }, [modalOpen]);
 
     useEffect(() => {
         if (nick) {
             hubConnection!.send('AddNewUser', nick);
         }
-    }, [nick])
-
-    useEffect(() => {
-        setMessages([...messages, text]);
-        setText('');
-    }, [text]);
+    }, [modalOpen])
 
     function sendMessage(): void {
         hubConnection!
@@ -76,13 +74,23 @@ export function Chat(props: any) {
     }
 
     return (
-        <div>
+        <Container>
             <br />
-            <div>
-                {messages.map((message, index) => (
-                    <span style={{ display: 'block' }} key={index}> {message} </span>
-                ))}
-            </div>
+            <Modal isOpen={modalOpen} >
+                <ModalBody>
+                    <Label for="nickname">Please input your nickname: </Label>
+                    <input
+                        id="nickname"
+                        type="text"
+                        value={nick}
+                        onChange={e => setNick(e.target.value)}
+                    />
+                </ModalBody>
+                <ModalFooter>
+                    <Button onClick={() => setModalOpen(false)}>Confirm</Button>
+                </ModalFooter>
+            </Modal>
+            <ChatBox message={text} />
             <input
                 type="text"
                 value={message}
@@ -90,6 +98,6 @@ export function Chat(props: any) {
                 onKeyDown={onEnter}
             />
             <button onClick={sendMessage}>Send It</button>
-        </div >
+        </Container >
     );
 }
