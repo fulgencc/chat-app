@@ -17,7 +17,7 @@ const App: React.FC = () => {
         >
           Learn React
         </a>
-        <Chat></Chat>
+        <Chat />
       </header>
     </div>
   );

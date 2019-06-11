@@ -1,103 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import { HubConnection, HubConnectionBuilder } from '@aspnet/signalr';
-import { Container, Modal, ModalBody, Button, ModalFooter, Label } from 'reactstrap';
+import { Container } from 'reactstrap';
 import { ChatBox } from './ChatBox';
-// interface IMessage {
-//     nick: string | null,
-//     message: string,
-//     messages: [],
-//     hubConnection: HubConnection
-// }
+import { NickModal } from './NickModal';
+import { SendMessageButton } from './SendMessageButton';
 
-export function Chat(props: any) {
+export function Chat() {
     const [message, setMessage] = useState<string>('');
-    const [text, setText] = useState<string>('');
+    const [messages, setMessages] = useState<string[]>([]);
     const [nick, setNick] = useState<string>();
-    const [hubConnection, sethubConnection] = useState<HubConnection>();
-    const [modalOpen, setModalOpen] = useState(true);
+    const [hubConnection, setHubConnection] = useState<HubConnection>();
 
-
+    // set the Hub Connection on mount.
     useEffect(() => {
 
-        //setNick(window.prompt('Your name: ', 'John'));
+        // Set the initial SignalR Hub Connection.
+        const createHubConnection = async () => {
 
-        sethubConnection(
-            () => {
-                const s = new HubConnectionBuilder()
-                    .withUrl("http://localhost:60709/chat")
-                    .build();
+            // Build new Hub Connection, url is currently hard coded.
+            const hubConnect = new HubConnectionBuilder()
+                .withUrl("http://10.1.18.186:5000/chat")
+                .build();
+            try {
+                await hubConnect.start()
+                console.log('Connection successful!')
 
-                if (s) {
-                    s.start()
-                        .then(() => {
-                            // setNick(window.prompt('Your name: ', 'John'));
-                            console.log('Connection successful!')
-                        })
-                        .catch(err => console.log('Error while establishing connection: ' + { err }));
+                // Bind event handlers to the hubConnection.
+                hubConnect.on('sendtoall', (nick: string, receivedMessage: string) => {
+                    setMessages(m => [...m, `${nick}: ${receivedMessage}`]);
+                })
+                hubConnect.on('newuserconnected', (nick: string) => {
+                    setMessages(m => [...m, `${nick} has connected.`]);
+                })
+                // **TODO**
+                // hubConnection.off('userdisconnected', (nick: string) => {
+                //  
+                //     setMessages(m => [...m, `${nick} has disconnected.`]);
+                // })
+            }
+            catch (err) {
+                alert(err);
+                console.log('Error while establishing connection: ' + { err })
+            }
+            setHubConnection(hubConnect);
 
-                    s.on('sendtoall', (nick: string, receivedMessage: string) => {
-                        setText(`${nick}: ${receivedMessage}`);
-                    })
-
-                    s.on('newuserconnected', (nick: string) => {
-                        setText(`${nick} has connected.`);
-                    })
-                    s.off('userdisconnected', (nick: string) => {
-                        setText(`${nick} has disconnected.`);
-                    })
-
-                }
-                return s;
-            });
-
-        // onConnected();
-    }, [modalOpen]);
-
-    useEffect(() => {
-        if (nick) {
-            hubConnection!.send('AddNewUser', nick);
         }
-    }, [modalOpen])
 
-    function sendMessage(): void {
-        hubConnection!
-            .invoke('sendToAll', nick, message)
-            .catch(err => console.error(err));
+        createHubConnection();
 
-        setMessage('');
-    }
+    }, []);
 
-    const onEnter = (event: React.KeyboardEvent<HTMLInputElement>): void => {
-        if (event.key === 'Enter') {
-            sendMessage()
+    /** Send message to server with client's nickname and message. */
+    function sendMessage(message: string): void {
+        if (hubConnection && message !== '') {
+            hubConnection
+                .invoke('sendToAll', nick, message)
+                .catch(err => console.error(err));
+
         }
     }
 
     return (
         <Container>
-            <br />
-            <Modal isOpen={modalOpen} >
-                <ModalBody>
-                    <Label for="nickname">Please input your nickname: </Label>
-                    <input
-                        id="nickname"
-                        type="text"
-                        value={nick}
-                        onChange={e => setNick(e.target.value)}
-                    />
-                </ModalBody>
-                <ModalFooter>
-                    <Button onClick={() => setModalOpen(false)}>Confirm</Button>
-                </ModalFooter>
-            </Modal>
-            <ChatBox message={text} />
-            <input
-                type="text"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                onKeyDown={onEnter}
-            />
-            <button onClick={sendMessage}>Send It</button>
+            <NickModal hubConnection={hubConnection} setNick={setNick} />
+            <ChatBox messages={messages} />
+            <SendMessageButton sendMessage={sendMessage} message={message} setMessage={setMessage} />
         </Container >
     );
 }
