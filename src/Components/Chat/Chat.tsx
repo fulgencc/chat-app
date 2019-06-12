@@ -11,7 +11,7 @@ export function Chat() {
     const [nick, setNick] = useState<string>();
     const [hubConnection, setHubConnection] = useState<HubConnection>();
 
-    // set the Hub Connection on mount.
+    // Set the Hub Connection on mount.
     useEffect(() => {
 
         // Set the initial SignalR Hub Connection.
@@ -19,7 +19,7 @@ export function Chat() {
 
             // Build new Hub Connection, url is currently hard coded.
             const hubConnect = new HubConnectionBuilder()
-                .withUrl("http://10.1.18.186:5000/chat")
+                .withUrl(process.env.REACT_APP_ENDPOINT_PATH!)
                 .build();
             try {
                 await hubConnect.start()
@@ -63,8 +63,10 @@ export function Chat() {
     return (
         <Container>
             <NickModal hubConnection={hubConnection} setNick={setNick} />
-            <ChatBox messages={messages} />
-            <SendMessageButton sendMessage={sendMessage} message={message} setMessage={setMessage} />
+            {nick && <>
+                <ChatBox messages={messages} />
+                <SendMessageButton sendMessage={sendMessage} message={message} setMessage={setMessage} />
+            </>}
         </Container >
     );
 }
