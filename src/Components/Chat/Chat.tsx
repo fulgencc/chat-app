@@ -47,22 +47,24 @@ export function Chat() {
         }
 
         createHubConnection();
-
     }, []);
 
     /** Send message to server with client's nickname and message. */
-    function sendMessage(message: string): void {
-        if (hubConnection && message !== '') {
-            hubConnection
-                .invoke('sendToAll', nick, message)
-                .catch(err => console.error(err));
+    async function sendMessage(message: string): Promise<void> {
+        try {
+            if (hubConnection && message !== '') {
+                await hubConnection.invoke('sendToAll', nick, message)
 
+            }
+        }
+        catch (err) {
+            console.error(err);
         }
     }
 
     return (
         <Container>
-            <NickModal hubConnection={hubConnection} setNick={setNick} />
+            <NickModal hubConnection={hubConnection} setNickProp={setNick} />
             {nick && <>
                 <ChatBox messages={messages} />
                 <SendMessageButton sendMessage={sendMessage} message={message} setMessage={setMessage} />

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 
 
-// ChatBox component, which receives messages and displays them.
+/** ChatBox component, which receives an array of string messages and displays them. */
 export function ChatBox(props: { messages: string[] }) {
 
     useEffect(() => {

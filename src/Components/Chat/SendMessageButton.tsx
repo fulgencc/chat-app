@@ -1,10 +1,16 @@
 import React, { useState } from 'react'
 
-export function SendMessageButton(props: any) {
+export interface ISendMessageButtonProps {
+  sendMessage: (message: string) => Promise<void>,
+  message: string,
+  setMessage: React.Dispatch<React.SetStateAction<string>>
+}
+
+export function SendMessageButton(props: ISendMessageButtonProps) {
   const [message, setMessage] = useState<string>('');
 
-  const handleMessage = () => {
-    props.sendMessage(message);
+  const handleMessage = async () => {
+    await props.sendMessage(message)
     setMessage('');
   }
 
